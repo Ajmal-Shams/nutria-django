@@ -108,3 +108,29 @@ class StorySerializer(serializers.ModelSerializer):
     def get_avatar_url(self, obj):
         email_hash = hashlib.md5(obj.email.lower().encode('utf-8')).hexdigest()
         return f"https://www.gravatar.com/avatar/{email_hash}?d=mp&s=150"
+    
+
+
+
+from rest_framework import serializers
+from .models import Recipe
+
+class RecipeSerializer(serializers.ModelSerializer):
+    author_name = serializers.ReadOnlyField(source='author.name')
+    author_email = serializers.ReadOnlyField(source='author.email')
+    image_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Recipe
+        fields = [
+            'id', 'title', 'ingredients', 'instructions',
+            'cuisine', 'total_time_mins', 'image', 'image_url',
+            'author', 'author_name', 'author_email', 'created_at'
+        ]
+        read_only_fields = ['author']
+
+    def get_image_url(self, obj):
+        if obj.image:
+            request = self.context.get('request')
+            return request.build_absolute_uri(obj.image.url) if request else obj.image.url
+        return None
